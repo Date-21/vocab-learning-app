@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0e1a">
+    <title>Oişbiting | Yıldız Haritası</title>
+
+    <!-- Fonts: Cinzel (Astronomik Yazıtlar) + Inter (Hassas Okunabilirlik) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- GSAP & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <!-- Design System CSS -->
+    <link rel="stylesheet" href="css/stellar.css">
+</head>
+<body>
+
+    <!-- Tier 1: Living Background — Star Field -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Atmosphere Layers -->
+    <div class="nebula-layer"></div>
+    <div class="noise-overlay"></div>
+    <div class="vignette-overlay"></div>
+
+    <!-- App Shell -->
+    <div id="app">
+        <!-- Header -->
+        <header id="app-header">
+            <div class="header-logo">
+                <svg class="logo-icon" viewBox="0 0 28 28" fill="none">
+                    <circle cx="14" cy="14" r="12" stroke="var(--accent-1)" stroke-width="1" opacity="0.4"/>
+                    <circle cx="14" cy="14" r="6" stroke="var(--accent-1)" stroke-width="1" opacity="0.6"/>
+                    <circle cx="14" cy="14" r="2" fill="var(--accent-1)"/>
+                    <line x1="14" y1="0" x2="14" y2="6" stroke="var(--accent-1)" stroke-width="0.5" opacity="0.3"/>
+                    <line x1="14" y1="22" x2="14" y2="28" stroke="var(--accent-1)" stroke-width="0.5" opacity="0.3"/>
+                    <line x1="0" y1="14" x2="6" y2="14" stroke="var(--accent-1)" stroke-width="0.5" opacity="0.3"/>
+                    <line x1="22" y1="14" x2="28" y2="14" stroke="var(--accent-1)" stroke-width="0.5" opacity="0.3"/>
+                </svg>
+                <span class="logo-text">Oişbiting</span>
+            </div>
+            <button id="theme-toggle" class="header-action" aria-label="Tema değiştir">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-content">
+            <!-- Loading Screen -->
+            <div id="loading-screen" class="loading-screen">
+                <div class="constellation-loader">
+                    <svg viewBox="0 0 100 100" width="80" height="80">
+                        <circle class="loader-star s1" cx="30" cy="20" r="2" fill="var(--accent-1)"/>
+                        <circle class="loader-star s2" cx="70" cy="30" r="2.5" fill="var(--accent-1)"/>
+                        <circle class="loader-star s3" cx="50" cy="70" r="2" fill="var(--accent-1)"/>
+                        <circle class="loader-star s4" cx="20" cy="60" r="1.5" fill="var(--accent-1)"/>
+                        <circle class="loader-star s5" cx="80" cy="65" r="1.5" fill="var(--accent-1)"/>
+                        <line class="loader-line l1" x1="30" y1="20" x2="70" y2="30" stroke="var(--accent-1)" stroke-width="0.5" opacity="0"/>
+                        <line class="loader-line l2" x1="70" y1="30" x2="50" y2="70" stroke="var(--accent-1)" stroke-width="0.5" opacity="0"/>
+                        <line class="loader-line l3" x1="50" y1="70" x2="20" y2="60" stroke="var(--accent-1)" stroke-width="0.5" opacity="0"/>
+                        <line class="loader-line l4" x1="20" y1="60" x2="30" y2="20" stroke="var(--accent-1)" stroke-width="0.5" opacity="0"/>
+                        <line class="loader-line l5" x1="50" y1="70" x2="80" y2="65" stroke="var(--accent-1)" stroke-width="0.5" opacity="0"/>
+                    </svg>
+                </div>
+                <p class="loading-text">Harita genişliyor...</p>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav id="bottom-nav" aria-label="Ana navigasyon">
+            <!-- Keşif / Home -->
+            <button class="nav-item" data-page="home" aria-label="Keşif">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                </svg>
+                <span>Keşif</span>
+            </button>
+
+            <!-- Takımyıldızlar / Flashcards -->
+            <button class="nav-item active" data-page="flashcards" aria-label="Takımyıldızlar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="5" cy="5" r="1.5"/><circle cx="19" cy="5" r="1.5"/>
+                    <circle cx="12" cy="12" r="2"/><circle cx="5" cy="19" r="1.5"/>
+                    <circle cx="19" cy="19" r="1.5"/>
+                    <line x1="5" y1="5" x2="12" y2="12" opacity="0.5"/>
+                    <line x1="19" y1="5" x2="12" y2="12" opacity="0.5"/>
+                    <line x1="5" y1="19" x2="12" y2="12" opacity="0.5"/>
+                    <line x1="19" y1="19" x2="12" y2="12" opacity="0.5"/>
+                </svg>
+                <span>Yıldızlar</span>
+            </button>
+
+            <!-- Gözlemevi / Study -->
+            <button class="nav-item" data-page="study" aria-label="Gözlemevi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="5" r="3"/>
+                    <path d="M12 8v8"/>
+                    <path d="M8 22l4-6 4 6"/>
+                    <path d="M6 14h12" opacity="0.4"/>
+                </svg>
+                <span>Gözlemevi</span>
+            </button>
+
+            <!-- Uzay Yarışı / Competition -->
+            <button class="nav-item" data-page="competition" aria-label="Uzay Yarışı">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L8 8H3l4 5-2 7 7-4 7 4-2-7 4-5h-5L12 2z"/>
+                </svg>
+                <span>Arena</span>
+            </button>
+
+            <!-- Yıldız Meclisi / Forum -->
+            <button class="nav-item" data-page="forum" aria-label="Yıldız Meclisi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    <circle cx="9" cy="10" r="1" fill="currentColor" opacity="0.4"/>
+                    <circle cx="15" cy="10" r="1" fill="currentColor" opacity="0.4"/>
+                </svg>
+                <span>Meclis</span>
+            </button>
+
+            <!-- Gözlemcinin Günlüğü / Profile -->
+            <button class="nav-item" data-page="profile" aria-label="Profil">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                    <circle cx="18" cy="5" r="1" fill="currentColor" opacity="0.4"/>
+                </svg>
+                <span>Gözlemci</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" aria-live="polite"></div>
+
+    <!-- CONFIG (Must load first) -->
+    <script src="js/config.js"></script>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+
+    <!-- XLSX for admin Excel import -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- GSAP Global Config -->
+    <script>
+        gsap.config({ force3D: true });
+        gsap.defaults({ ease: 'power2.inOut' });
+    </script>
+
+    <!-- Canvas Background -->
+    <script src="js/canvas-bg.js"></script>
+
+    <!-- Utilities -->
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/storage.js"></script>
+    <script src="js/utils/toast.js"></script>
+    <script src="js/utils/modal.js"></script>
+
+    <!-- Components -->
+    <script src="js/components/charts.js"></script>
+    <script src="js/components/flashcard.js"></script>
+    <script src="js/components/test.js"></script>
+
+    <!-- Pages -->
+    <script src="js/pages/auth-page.js"></script>
+    <script src="js/pages/home.js"></script>
+    <script src="js/pages/flashcards-page.js"></script>
+    <script src="js/pages/study-page.js"></script>
+    <script src="js/pages/competition-page.js"></script>
+    <script src="js/pages/reports-page.js"></script>
+    <script src="js/pages/forum-page.js"></script>
+    <script src="js/pages/profile-page.js"></script>
+    <script src="js/pages/admin-page.js"></script>
+
+    <!-- Core Logic -->
+    <script src="js/auth/auth.js"></script>
+    <script src="js/router.js"></script>
+
+    <!-- Main App Entry -->
+    <script src="js/app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,235 @@
+/* ============================================
+   Oisbiting — Design DNA Tokens
+   Metaphor: Kadim Kutüphane (Ancient Library)
+   Harmony: Analogous Warm
+   Scale: Minor Third (1.200)
+   Physics: power2 family
+   ============================================ */
+
+:root {
+    /* === PALETTE — Dark Theme (Candlelit Library at Night) ===
+       Canvas:  kapkaranlik kutuphane — koyu sepia, ASLA saf siyah
+       Surface: deri cilt yuzeyi
+       Accent1: mum isigi altini
+       Accent2: bordo / sarap kirmizisi
+       Text:    parsome uzerine murekkep
+       Glow:    sicak mum isigi golge tonu
+    */
+    --canvas: #1a1209;
+    --canvas-deep: #110d06;
+    --surface: #2a1f14;
+    --surface-hover: #342819;
+    --surface-elevated: #3d2f21;
+
+    --accent-1: #c9a84c;
+    --accent-2: #722f37;
+    --accent-1-rgb: 201, 168, 76;
+    --accent-2-rgb: 114, 47, 55;
+
+    --text: #e8e0d0;
+    --text-muted: #9c8b74;
+    --text-faint: #756756;
+    --text-inverse: #1a1209;
+
+    /* Semantic — kutüphane-tintli, ASLA ham kirmizi/yesil */
+    --success: #5d8a4b;
+    --success-bg: rgba(93, 138, 75, 0.12);
+    --warning: #c9943a;
+    --warning-bg: rgba(201, 148, 58, 0.12);
+    --error: #a63d3d;
+    --error-bg: rgba(166, 61, 61, 0.12);
+    --info: #4a7a8f;
+    --info-bg: rgba(74, 122, 143, 0.12);
+
+    /* Gradients */
+    --gradient-gold: linear-gradient(135deg, #c9a84c, #8b6914);
+    --gradient-accent: linear-gradient(135deg, #c9a84c, #a08030);
+    --gradient-burgundy: linear-gradient(135deg, #722f37, #5a1f2a);
+    --gradient-bg:
+        radial-gradient(ellipse at 20% 30%, rgba(201, 168, 76, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(114, 47, 55, 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at center, transparent 40%, rgba(17, 13, 6, 0.4) 100%);
+
+    /* Borders — sicak tintli */
+    --border-light: rgba(201, 168, 76, 0.08);
+    --border-medium: rgba(201, 168, 76, 0.15);
+    --border-strong: rgba(201, 168, 76, 0.25);
+
+    /* Shadows — ustten isik, sicak tint, ASLA saf siyah */
+    --shadow-sm: 0 2px 8px rgba(139, 90, 43, 0.08);
+    --shadow-md: 0 4px 16px rgba(139, 90, 43, 0.10);
+    --shadow-lg: 0 8px 32px rgba(139, 90, 43, 0.12);
+    --shadow-glow: 0 0 20px rgba(201, 168, 76, 0.15);
+
+    /* Card glass */
+    --bg-card: rgba(42, 31, 20, 0.75);
+    --bg-card-hover: rgba(52, 40, 25, 0.85);
+    --bg-modal: rgba(26, 18, 9, 0.92);
+
+    /* === TYPOGRAPHY — Cormorant Garamond + Karla ===
+       Display: klasik, kitap baslik ruhu
+       Body: humanist sans, sicak, okunabilir
+       Scale: Minor Third (1.200), base 16px
+    */
+    --font-display: 'Cormorant Garamond', 'Georgia', serif;
+    --font-body: 'Karla', 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+
+    --text-xs: 0.694rem;    /* 16 / 1.2^2 = ~11px */
+    --text-sm: 0.833rem;    /* 16 / 1.2   = ~13px */
+    --text-base: 1rem;      /* 16px */
+    --text-lg: 1.2rem;      /* 16 x 1.2   = ~19px */
+    --text-xl: 1.44rem;     /* 16 x 1.2^2 = ~23px */
+    --text-2xl: 1.728rem;   /* 16 x 1.2^3 = ~28px */
+    --text-3xl: 2.074rem;   /* 16 x 1.2^4 = ~33px */
+    --text-hero: clamp(1.8rem, 7vw, 2.5rem);
+
+    /* Weight hierarchy — SADECE 3 agirlik */
+    --weight-body: 400;
+    --weight-semi: 600;
+    --weight-bold: 700;
+
+    /* Line heights */
+    --lh-display: 1.15;
+    --lh-heading: 1.25;
+    --lh-body: 1.6;
+    --lh-caption: 1.35;
+
+    /* Letter spacing */
+    --ls-tight: -0.02em;
+    --ls-normal: 0;
+    --ls-wide: 0.1em;
+
+    /* === SHAPE LANGUAGE — Crisp/Geometric === */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+
+    /* === SPACING — 8px taban ritim === */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 40px;
+    --space-2xl: 64px;
+
+    /* === MOTION — power2 ailesi, TEK easing sistemi === */
+    --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+    --ease-in: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    --ease-in-out: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+
+    --duration-micro: 150ms;
+    --duration-fast: 250ms;
+    --duration-normal: 400ms;
+    --duration-slow: 600ms;
+    --duration-page: 500ms;
+    --stagger: 60ms;
+
+    /* === Z-INDEX === */
+    --z-canvas: 0;
+    --z-grain: 1;
+    --z-content: 2;
+    --z-header: 100;
+    --z-nav: 100;
+    --z-modal-backdrop: 400;
+    --z-modal: 500;
+    --z-toast: 600;
+
+    /* === LAYOUT === */
+    --header-height: 56px;
+    --nav-height: 64px;
+    --max-width: 480px;
+
+    /* === TEXTURE === */
+    --grain-opacity: 0.04;
+
+    /* === JS UYUMLULUK ALIAS'LARI ===
+       JS dosyalarindaki inline style referanslari icin.
+       Yeni CSS sadece yeni isimleri kullanir. */
+    --spacing-xs: var(--space-xs);
+    --spacing-sm: var(--space-sm);
+    --spacing-md: var(--space-md);
+    --spacing-lg: var(--space-lg);
+    --spacing-xl: var(--space-xl);
+    --spacing-2xl: var(--space-2xl);
+    --text-secondary: var(--text-muted);
+    --text-tertiary: var(--text-faint);
+}
+
+/* ============================================
+   LIGHT THEME — Gunduz Isiginda Kutüphane
+   ============================================ */
+[data-theme="light"] {
+    --canvas: #f5f0e6;
+    --canvas-deep: #efe8db;
+    --surface: #ebe4d6;
+    --surface-hover: #e2dacb;
+    --surface-elevated: #fff8ee;
+
+    --accent-1: #8b6914;
+    --accent-2: #722f37;
+    --accent-1-rgb: 139, 105, 20;
+    --accent-2-rgb: 114, 47, 55;
+
+    --text: #2a1f14;
+    --text-muted: #6b5e52;
+    --text-faint: #8b7d6b;
+    --text-inverse: #f5f0e6;
+
+    --success: #4a7a3d;
+    --success-bg: rgba(74, 122, 61, 0.10);
+    --warning: #a07828;
+    --warning-bg: rgba(160, 120, 40, 0.10);
+    --error: #8b3030;
+    --error-bg: rgba(139, 48, 48, 0.10);
+    --info: #3a6a7f;
+    --info-bg: rgba(58, 106, 127, 0.10);
+
+    --gradient-gold: linear-gradient(135deg, #8b6914, #6b4f0e);
+    --gradient-accent: linear-gradient(135deg, #8b6914, #7a5c12);
+    --gradient-burgundy: linear-gradient(135deg, #722f37, #5a1f2a);
+    --gradient-bg:
+        radial-gradient(ellipse at 20% 30%, rgba(139, 105, 20, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(114, 47, 55, 0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at center, transparent 50%, rgba(239, 232, 219, 0.5) 100%);
+
+    --border-light: rgba(42, 31, 20, 0.06);
+    --border-medium: rgba(42, 31, 20, 0.12);
+    --border-strong: rgba(42, 31, 20, 0.20);
+
+    --shadow-sm: 0 2px 8px rgba(139, 90, 43, 0.06);
+    --shadow-md: 0 4px 16px rgba(139, 90, 43, 0.08);
+    --shadow-lg: 0 8px 32px rgba(139, 90, 43, 0.10);
+    --shadow-glow: 0 0 20px rgba(139, 105, 20, 0.10);
+
+    --bg-card: rgba(255, 248, 238, 0.80);
+    --bg-card-hover: rgba(255, 252, 245, 0.90);
+    --bg-modal: rgba(245, 240, 230, 0.95);
+
+    --grain-opacity: 0.03;
+}
+
+/* ============================================
+   CARD TEXT SIZE (kullanici tercihi)
+   ============================================ */
+[data-card-size="small"] {
+    --card-title-size: 1.25rem;
+    --card-pronunciation-size: 0.75rem;
+    --card-meaning-size: 0.875rem;
+    --card-sentence-size: 0.813rem;
+}
+[data-card-size="normal"] {
+    --card-title-size: 1.5rem;
+    --card-pronunciation-size: 0.875rem;
+    --card-meaning-size: 1rem;
+    --card-sentence-size: 0.938rem;
+}
+[data-card-size="large"] {
+    --card-title-size: 1.875rem;
+    --card-pronunciation-size: 1rem;
+    --card-meaning-size: 1.125rem;
+    --card-sentence-size: 1.063rem;
+}

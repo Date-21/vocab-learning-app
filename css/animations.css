@@ -1,0 +1,596 @@
+/* ============================================
+   Oisbiting — Kadim Kutüphane Animasyonlari
+   Hareket Dili: power2 ailesi (TEK easing)
+   Zamanlama: micro 150ms, fast 250ms, normal 400ms, slow 600ms
+   Stagger ritmi: 60ms
+   Imza: Anticipation → Action → Side Effects → Settle
+   ============================================ */
+
+/* ==============================
+   KEYFRAMES — Temel
+   ============================== */
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Raftan kitap ceker gibi — yandan kayma */
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ==============================
+   KEYFRAMES — Imza Hareketler
+   ============================== */
+
+/* Kitabi masaya koyma — settle with micro-bounce */
+@keyframes settleIn {
+    0% {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+    60% {
+        transform: translateY(-2px) scale(1.005);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Olcekli giris — modal, kart acilmasi */
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes scaleOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+}
+
+/* Bounceyle giris — seviye tamamlama, sonuc */
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+    50% {
+        transform: scale(1.06);
+    }
+    70% {
+        transform: scale(0.97);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Muhur damga — basari kutlamasi (back.out easing) */
+@keyframes sealStamp {
+    0% {
+        transform: scale(2.5) rotate(-15deg);
+        opacity: 0;
+    }
+    40% {
+        transform: scale(0.9) rotate(3deg);
+        opacity: 1;
+    }
+    65% {
+        transform: scale(1.08) rotate(-1deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* Murekkep yayilma — reveal efekti */
+@keyframes inkSpread {
+    from {
+        clip-path: circle(0% at 50% 50%);
+        opacity: 0;
+    }
+    to {
+        clip-path: circle(100% at 50% 50%);
+        opacity: 1;
+    }
+}
+
+/* Murekkep yayilma giris — dikey reveal */
+@keyframes inkRevealUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.97);
+        filter: blur(2px);
+    }
+    50% {
+        filter: blur(0);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+/* Sayfa girisi — pageEnter */
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==============================
+   KEYFRAMES — Pop / Stamp
+   ============================== */
+
+/* Pop giris — badge, puan popup */
+@keyframes popIn {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    70% {
+        transform: scale(1.08);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Puan yukari ucusu */
+@keyframes pointsUp {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.8);
+    }
+}
+
+/* Puan asagi ucusu */
+@keyframes pointsDown {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.8);
+    }
+}
+
+/* ==============================
+   KEYFRAMES — Surekli / Dongu
+   ============================== */
+
+/* Toz zerresi gibi suzulme */
+@keyframes floatGentle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+/* Mum isigi nabzi */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(var(--accent-1-rgb), 0.3);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 0 8px rgba(var(--accent-1-rgb), 0);
+    }
+}
+
+/* Sicak isik parlamasi */
+@keyframes warmGlow {
+    0%, 100% {
+        box-shadow: 0 0 8px rgba(var(--accent-1-rgb), 0.15);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(var(--accent-1-rgb), 0.3),
+                    0 0 30px rgba(var(--accent-1-rgb), 0.15);
+    }
+}
+
+/* Seri atesi — streak badge */
+@keyframes streakFlicker {
+    0%, 100% {
+        text-shadow: 0 0 4px rgba(255, 140, 50, 0.5);
+    }
+    33% {
+        text-shadow: 0 0 8px rgba(255, 140, 50, 0.8),
+                     0 0 16px rgba(255, 100, 20, 0.3);
+    }
+    66% {
+        text-shadow: 0 0 6px rgba(255, 140, 50, 0.6),
+                     0 0 12px rgba(255, 100, 20, 0.2);
+    }
+}
+
+/* Donme */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Isiltili kayma — shimmer */
+@keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+}
+
+/* ==============================
+   KEYFRAMES — Yumusak sarsinti (hata)
+   ============================== */
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-3px); }
+    40%, 80% { transform: translateX(3px); }
+}
+
+/* ==============================
+   KEYFRAMES — Kart & Flashcard
+   ============================== */
+
+/* 3D kart cevirme — kitap sayfasi */
+@keyframes cardFlip {
+    0% { transform: rotateY(0); }
+    100% { transform: rotateY(180deg); }
+}
+
+@keyframes cardFlipBack {
+    0% { transform: rotateY(180deg); }
+    100% { transform: rotateY(0); }
+}
+
+/* ==============================
+   KEYFRAMES — Toast
+   ============================== */
+
+@keyframes toastIn {
+    from {
+        transform: translateX(100%) scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes toastOut {
+    from {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%) scale(0.9);
+        opacity: 0;
+    }
+}
+
+/* ==============================
+   KEYFRAMES — Yukleme Durumlari
+   ============================== */
+
+/* Kitap sayfasi flutter — loading */
+@keyframes bookFlutter {
+    0% { transform: rotateY(0deg); }
+    50% { transform: rotateY(-180deg); }
+    100% { transform: rotateY(-180deg); }
+}
+
+/* Timer ring countdown */
+@keyframes countdownRing {
+    from { stroke-dashoffset: 0; }
+    to { stroke-dashoffset: 283; }
+}
+
+/* Logo SVG stroke cizimi */
+@keyframes strokeDraw {
+    from { stroke-dashoffset: 200; }
+    to { stroke-dashoffset: 0; }
+}
+
+/* Logo alev titresmesi */
+@keyframes flameFlicker {
+    0%, 100% { opacity: 0.7; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.1); }
+}
+
+/* Logo metin belirme */
+@keyframes textReveal {
+    from { opacity: 0; letter-spacing: 0.3em; }
+    to { opacity: 1; letter-spacing: 0.1em; }
+}
+
+/* ==============================
+   SAYFA GECIS SINIFLARI
+   ============================== */
+
+.page-enter {
+    animation: fadeInUp var(--duration-normal) var(--ease-out) forwards;
+}
+
+.page-exit {
+    animation: fadeOut var(--duration-fast) var(--ease-in) forwards;
+}
+
+/* ==============================
+   ANIMASYON YARDIMCI SINIFLARI
+   JS dosyalarindan referans edilen
+   ============================== */
+
+/* Bounceyle giris — test sonuclari, seviye tamamlama */
+.animate-bounce-in {
+    animation: bounceIn var(--duration-normal) var(--ease-out) forwards;
+}
+
+/* Fade giris */
+.animate-fade-in {
+    animation: fadeIn var(--duration-fast) var(--ease-out) forwards;
+}
+
+/* Olcekli giris — modal content */
+.animate-scale-in {
+    animation: scaleIn var(--duration-normal) var(--ease-out) forwards;
+}
+
+/* Olcekli cikis — modal kapanis */
+.animate-scale-out {
+    animation: scaleOut var(--duration-fast) var(--ease-in) forwards;
+}
+
+/* Puan popup — yukari */
+.animate-points-up {
+    animation: pointsUp 0.8s var(--ease-out) forwards;
+}
+
+/* Puan popup — asagi */
+.animate-points-down {
+    animation: pointsDown 0.6s var(--ease-out) forwards;
+}
+
+/* Muhur damga */
+.animate-seal {
+    animation: sealStamp var(--duration-page) var(--ease-out) forwards;
+}
+
+/* Seri badge atesi */
+.animate-streak {
+    animation: streakFlicker 2s ease-in-out infinite;
+}
+
+/* Surekli suzulme */
+.animate-float {
+    animation: floatGentle 4s var(--ease-in-out) infinite;
+}
+
+/* Nabiz */
+.animate-pulse {
+    animation: pulse 2.5s infinite;
+}
+
+/* Donme — spinner */
+.animate-spin {
+    animation: spin 1.2s linear infinite;
+}
+
+/* Sicak parlama */
+.animate-glow {
+    animation: warmGlow 3s var(--ease-in-out) infinite;
+}
+
+/* Shimmer efekti — yukleme iskeleti */
+.animate-shimmer {
+    position: relative;
+    overflow: hidden;
+}
+.animate-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(var(--accent-1-rgb), 0.06),
+        transparent
+    );
+    animation: shimmer 2.5s infinite;
+}
+
+/* ==============================
+   STAGGER GECIKMELERI — 60ms ritim
+   ============================== */
+
+.stagger-1 { animation-delay: calc(var(--stagger) * 1); }
+.stagger-2 { animation-delay: calc(var(--stagger) * 2); }
+.stagger-3 { animation-delay: calc(var(--stagger) * 3); }
+.stagger-4 { animation-delay: calc(var(--stagger) * 4); }
+.stagger-5 { animation-delay: calc(var(--stagger) * 5); }
+.stagger-6 { animation-delay: calc(var(--stagger) * 6); }
+.stagger-7 { animation-delay: calc(var(--stagger) * 7); }
+.stagger-8 { animation-delay: calc(var(--stagger) * 8); }
+
+/* ==============================
+   3D TILT & INTERAKTIF SIHIR
+   ============================== */
+
+/* Perspektif konteyneri — 3D tilt kartlar */
+.tilt-card {
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+/* Isik yansimasi — pointer takip eder */
+.card-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-out);
+    background: radial-gradient(
+        circle at var(--shine-x, 50%) var(--shine-y, 50%),
+        rgba(var(--accent-1-rgb), 0.12) 0%,
+        rgba(var(--accent-1-rgb), 0.04) 30%,
+        transparent 60%
+    );
+}
+
+.tilt-card:hover .card-shine,
+.tilt-card:focus-within .card-shine {
+    opacity: 1;
+}
+
+/* ==============================
+   GSAP GIRIS HEDEFLERI
+   effects.js tarafindan kullanilir
+   ============================== */
+
+.gsap-reveal {
+    opacity: 0;
+    transform: translateY(24px);
+}
+
+.gsap-reveal-left {
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.gsap-reveal-right {
+    opacity: 0;
+    transform: translateX(20px);
+}
+
+.gsap-reveal-scale {
+    opacity: 0;
+    transform: scale(0.92);
+}
+
+/* ==============================
+   FLASHCARD 3D PERSPEKTIF
+   ============================== */
+
+.flashcard-container {
+    perspective: 1200px;
+}
+
+.flashcard {
+    transform-style: preserve-3d;
+}
+
+/* Interaktif kart konteynerleri — overflow hidden + position relative */
+.level-card,
+.study-option-card,
+.competition-option,
+.quick-action,
+.stat-card,
+.forum-topic {
+    position: relative;
+    overflow: hidden;
+}
+
+/* ==============================
+   ERISEBILIRLIK — Azaltilmis Hareket
+   Tasarim animasyonsuz da guzel kalir.
+   ============================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    canvas {
+        display: none !important;
+    }
+
+    .grain-overlay {
+        display: none !important;
+    }
+
+    .card-shine {
+        display: none !important;
+    }
+}
