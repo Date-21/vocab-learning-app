@@ -253,49 +253,51 @@ const FlashcardsPage = {
         this.saveSession();
 
         container.innerHTML = `
-            <div class="flashcard-progress">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
-                    <span style="font-family: var(--font-display); font-size: var(--text-sm); color: var(--accent-1);">
-                        ${isReview ? 'Yıldız Tekrarı' : Helpers.escapeHtml(this.currentLevel?.name || 'Keşif')}
-                    </span>
-                    <span style="font-size: var(--text-xs); color: var(--text-muted);">
-                        ${this.learnedWordIds.length}/${totalWords}
-                    </span>
+            <div class="flashcard-study-inner">
+                <div class="flashcard-progress">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+                        <span style="font-family: var(--font-display); font-size: var(--text-sm); color: var(--accent-1);">
+                            ${isReview ? 'Yıldız Tekrarı' : Helpers.escapeHtml(this.currentLevel?.name || 'Keşif')}
+                        </span>
+                        <span style="font-size: var(--text-xs); color: var(--text-muted);">
+                            ${this.learnedWordIds.length}/${totalWords}
+                        </span>
+                    </div>
+                    <div class="progress"><div class="progress-bar" style="width: ${progress}%"></div></div>
                 </div>
-                <div class="progress"><div class="progress-bar" style="width: ${progress}%"></div></div>
+
+                <div id="flashcard-container"></div>
+
+                <div class="flashcard-controls">
+                    <button class="control-btn repeat-btn" id="study-repeat">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                        </svg>
+                        Tekrar
+                    </button>
+                    <button class="control-btn flip-btn" id="study-flip">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                            <path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+                        </svg>
+                    </button>
+                    <button class="control-btn learn-btn" id="study-learn">
+                        Öğrendim
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <button class="exit-study-btn" id="exit-study">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Gözlemi Bitir
+                </button>
             </div>
-
-            <div id="flashcard-container"></div>
-
-            <div class="flashcard-controls">
-                <button class="control-btn repeat-btn" id="study-repeat">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-                    </svg>
-                    Tekrar
-                </button>
-                <button class="control-btn flip-btn" id="study-flip">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-                        <path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
-                    </svg>
-                </button>
-                <button class="control-btn learn-btn" id="study-learn">
-                    Öğrendim
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <button class="exit-study-btn" id="exit-study">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
-                Gözlemi Bitir
-            </button>
         `;
 
         // Create card component
@@ -579,23 +581,16 @@ const FlashcardsPage = {
     },
 
     // === EXIT STUDY ===
-    async exitStudy(isReview) {
-        const confirmed = await Modal.confirm(
-            'İlerlemen kaydedildi. Kaldığın yerden devam edebilirsin.',
-            'Gözlemi Bitir',
-            'Çıkış Yap',
-            'Vazgeç'
-        );
-        if (confirmed) {
-            // Save progress to DB
-            if (!isReview) this.syncLevelProgress();
-            // Keep session saved so user can resume from level select
-            this.saveSession();
-            Storage.endStudySession();
-            // Force navigate even if same page name (clear currentPage first)
-            Router.currentPage = null;
-            Router.navigate('flashcards');
-        }
+    exitStudy(isReview) {
+        // Save progress to DB
+        if (!isReview) this.syncLevelProgress();
+        // Clear session so it doesn't resume on next visit
+        this.clearSession();
+        Storage.endStudySession();
+
+        // Force navigate even if same page name (clear currentPage first)
+        Router.currentPage = null;
+        Router.navigate('flashcards');
     }
 };
 

@@ -141,6 +141,13 @@ const Auth = {
         this.profile = null;
         this.isAdmin = false;
         Storage.clear();
+
+        // Navigate to auth page
+        if (typeof Router !== 'undefined') {
+            Router.navigate(CONFIG.ROUTES.AUTH);
+        } else {
+            window.location.reload();
+        }
     },
 
     async resetPassword(email) {

@@ -100,8 +100,8 @@ const Flashcard = {
         if (typeof gsap !== 'undefined') {
             gsap.to(target, {
                 rotateY: this.isFlipped ? 180 : 0,
-                duration: 0.6,
-                ease: 'back.out(1.4)'
+                duration: 0.35,
+                ease: 'power2.out'
             });
         } else {
             target.style.transform = `rotateY(${this.isFlipped ? 180 : 0}deg)`;

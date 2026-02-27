@@ -558,14 +558,25 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     padding: var(--space-md);
-    min-height: calc(100vh - 56px - 64px);
-    gap: var(--space-lg);
-    margin: 0 auto;
-    max-width: 480px;
+    height: calc(100vh - 56px - 64px);
     width: 100%;
     box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Add a wrapper to safely center content without breaking scroll truncation on small devices */
+.flashcard-study-inner {
+    margin: auto 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 480px;
+    gap: var(--space-lg);
+    flex: 1;
 }
 
 .flashcard-progress {
@@ -586,12 +597,15 @@
 
 .flashcard {
     width: 100%;
-    aspect-ratio: 4/5;
+    max-width: 400px;
+    aspect-ratio: 3/4;
     position: relative;
     transform-style: preserve-3d;
     cursor: pointer;
     border-radius: var(--radius-lg);
-    transition: transform 0.6s var(--ease-gravitational);
+    transition: transform 0.35s var(--ease-gravitational);
+    margin: 0 auto;
+    /* Prevent browser history swipe */
 }
 
 /* Card Faces */
@@ -849,8 +863,15 @@
 }
 
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .level-complete-icon {
@@ -860,9 +881,19 @@
 }
 
 @keyframes bounceIn {
-    0% { transform: scale(0); opacity: 0; }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .complete-stats {
