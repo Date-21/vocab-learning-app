@@ -560,7 +560,7 @@
     align-items: center;
     justify-content: center;
     padding: var(--space-md);
-    min-height: calc(100vh - var(--header-height) - var(--nav-height));
+    min-height: calc(100vh - 56px - 64px);
     gap: var(--space-lg);
     margin: 0 auto;
     max-width: 480px;
@@ -591,7 +591,7 @@
     transform-style: preserve-3d;
     cursor: pointer;
     border-radius: var(--radius-lg);
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.6s var(--ease-gravitational);
 }
 
 /* Card Faces */
@@ -606,20 +606,17 @@
     flex-direction: column;
     justify-content: space-between;
     text-align: center;
-    box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border-medium);
-    background: var(--bg-card);
-}
-
-[data-theme="light"] .flashcard-face {
-    background: #ffffff;
-    border-color: #e5e7eb;
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
 .flashcard-back {
     transform: rotateY(180deg);
     background: var(--surface);
-    border-color: var(--border-medium);
+    border-color: var(--glass-border);
 }
 
 /* Front Content Layout */
@@ -635,10 +632,10 @@
 .flashcard-front .word {
     font-family: var(--font-display);
     font-size: clamp(2rem, 8vw, 3rem);
-    font-weight: 800;
+    font-weight: 700;
     color: var(--accent-1);
     line-height: 1.1;
-    text-shadow: 0 0 20px rgba(var(--accent-1-rgb), 0.2);
+    text-shadow: 0 0 20px rgba(245, 197, 66, 0.2);
 }
 
 .flashcard-front .pronunciation {
@@ -680,7 +677,7 @@
     font-size: 1.5em;
 }
 
-/* === CONTROL BUTTONS — Theme-compatible, warm tinted === */
+/* === CONTROL BUTTONS — Stellar theme-compatible === */
 .flashcard-controls {
     display: flex;
     justify-content: center;
@@ -698,7 +695,7 @@
     gap: 6px;
     padding: 12px 20px;
     border-radius: var(--radius-full);
-    border: 1px solid var(--border-medium);
+    border: 1px solid var(--glass-border);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
@@ -706,7 +703,7 @@
     font-size: var(--text-sm);
     font-weight: 600;
     letter-spacing: 0.02em;
-    transition: all var(--duration-fast) var(--ease-out);
+    transition: all var(--duration-base) var(--ease-gravitational);
     flex: 1;
     box-shadow: var(--shadow-sm);
     -webkit-tap-highlight-color: transparent;
@@ -715,7 +712,7 @@
 .control-btn:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
-    background: var(--surface-hover);
+    background: var(--surface-2);
 }
 
 .control-btn:active {
@@ -729,42 +726,41 @@
     height: 56px;
     padding: 0;
     border-radius: 50%;
-    background: var(--gradient-gold);
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-1-dim));
     border: none;
-    color: var(--canvas-deep);
-    box-shadow: 0 4px 16px rgba(var(--accent-1-rgb), 0.35);
+    color: var(--canvas);
+    box-shadow: 0 4px 16px rgba(245, 197, 66, 0.35);
     font-size: 0;
 }
 
 .flip-btn:hover {
-    box-shadow: 0 6px 24px rgba(var(--accent-1-rgb), 0.5);
-    background: var(--gradient-accent);
+    box-shadow: 0 6px 24px rgba(245, 197, 66, 0.5);
 }
 
-/* Repeat button — warm error tint */
+/* Repeat button — error tint */
 .repeat-btn {
-    border-color: rgba(166, 61, 61, 0.25);
+    border-color: rgba(248, 113, 113, 0.25);
     color: var(--error);
-    background: var(--error-bg);
+    background: var(--error-dim);
 }
 
 .repeat-btn:hover {
-    background: rgba(166, 61, 61, 0.15);
+    background: rgba(248, 113, 113, 0.2);
     border-color: var(--error);
-    box-shadow: 0 4px 16px rgba(166, 61, 61, 0.15);
+    box-shadow: 0 4px 16px rgba(248, 113, 113, 0.15);
 }
 
-/* Learn button — warm success tint */
+/* Learn button — success tint */
 .learn-btn {
-    border-color: rgba(93, 138, 75, 0.25);
+    border-color: rgba(52, 211, 153, 0.25);
     color: var(--success);
-    background: var(--success-bg);
+    background: var(--success-dim);
 }
 
 .learn-btn:hover {
-    background: rgba(93, 138, 75, 0.15);
+    background: rgba(52, 211, 153, 0.2);
     border-color: var(--success);
-    box-shadow: 0 4px 16px rgba(93, 138, 75, 0.15);
+    box-shadow: 0 4px 16px rgba(52, 211, 153, 0.15);
 }
 
 /* Sound button — top-right, circular */
@@ -782,18 +778,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(var(--accent-1-rgb), 0.1);
-    border: 1px solid rgba(var(--accent-1-rgb), 0.2);
+    background: var(--accent-1-glow);
+    border: 1px solid rgba(245, 197, 66, 0.2);
     color: var(--accent-1);
     cursor: pointer;
-    transition: all var(--duration-fast) var(--ease-out);
+    transition: all var(--duration-base) var(--ease-gravitational);
     -webkit-tap-highlight-color: transparent;
     padding: 0;
 }
 
 .sound-btn:hover {
-    background: rgba(var(--accent-1-rgb), 0.2);
-    box-shadow: 0 0 12px rgba(var(--accent-1-rgb), 0.2);
+    background: rgba(245, 197, 66, 0.25);
+    box-shadow: 0 0 12px rgba(245, 197, 66, 0.2);
 }
 
 .sound-btn:active {
@@ -809,7 +805,7 @@
 .card-footer {
     font-family: var(--font-body);
     font-size: var(--text-xs);
-    color: var(--text-faint);
+    color: var(--text-muted);
     letter-spacing: 0.05em;
     opacity: 0.7;
     padding-top: var(--space-sm);
@@ -822,19 +818,19 @@
     gap: 6px;
     padding: 10px 24px;
     border-radius: var(--radius-full);
-    border: 1px solid var(--border-light);
+    border: 1px solid var(--glass-border);
     background: transparent;
-    color: var(--text-faint);
+    color: var(--text-muted);
     font-family: var(--font-body);
     font-size: var(--text-sm);
     cursor: pointer;
-    transition: all var(--duration-fast) var(--ease-out);
+    transition: all var(--duration-base) var(--ease-gravitational);
     margin-top: var(--space-md);
 }
 
 .exit-study-btn:hover {
-    border-color: var(--border-medium);
-    color: var(--text-muted);
+    border-color: rgba(245, 197, 66, 0.3);
+    color: var(--text-secondary);
     background: var(--surface);
 }
 
@@ -846,10 +842,10 @@
     justify-content: center;
     text-align: center;
     padding: var(--space-xl) var(--space-md);
-    min-height: calc(100vh - var(--header-height) - var(--nav-height));
+    min-height: calc(100vh - 56px - 64px);
     max-width: 480px;
     margin: 0 auto;
-    animation: fadeInUp 0.6s var(--ease-out);
+    animation: fadeInUp 0.6s var(--ease-gravitational);
 }
 
 @keyframes fadeInUp {
@@ -860,7 +856,7 @@
 .level-complete-icon {
     font-size: 4rem;
     margin-bottom: var(--space-lg);
-    animation: bounceIn 0.8s var(--ease-out);
+    animation: bounceIn 0.8s var(--ease-orbital);
 }
 
 @keyframes bounceIn {
@@ -880,14 +876,14 @@
 
 .complete-stat-card {
     padding: var(--space-lg);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     text-align: center;
 }
 
 .complete-stat-card .stat-value {
     font-family: var(--font-display);
     font-size: clamp(1.8rem, 5vw, 2.2rem);
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.1;
 }
 
@@ -910,25 +906,29 @@
 }
 
 .complete-actions .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     padding: 14px 24px;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
+    font-family: var(--font-body);
     font-weight: 600;
     font-size: var(--text-base);
     cursor: pointer;
-    transition: all var(--duration-fast) var(--ease-out);
-    border: 1px solid var(--border-medium);
+    transition: all var(--duration-base) var(--ease-gravitational);
+    border: 1px solid var(--glass-border);
 }
 
 .complete-actions .btn-next-level {
-    background: var(--gradient-gold);
-    color: var(--canvas-deep);
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-1-dim));
+    color: var(--canvas);
     border: none;
-    box-shadow: 0 4px 16px rgba(var(--accent-1-rgb), 0.3);
+    box-shadow: 0 4px 16px rgba(245, 197, 66, 0.3);
 }
 
 .complete-actions .btn-next-level:hover {
-    box-shadow: 0 6px 24px rgba(var(--accent-1-rgb), 0.5);
+    box-shadow: 0 6px 24px rgba(245, 197, 66, 0.5);
     transform: translateY(-2px);
 }
 
@@ -938,13 +938,12 @@
 }
 
 .complete-actions .btn-repeat-level:hover {
-    background: var(--surface-hover);
+    background: var(--surface-2);
 }
 
 .complete-actions .btn-back-levels {
     background: transparent;
     color: var(--text-muted);
-    border-color: var(--border-light);
 }
 
 .complete-actions .btn-back-levels:hover {

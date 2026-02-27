@@ -15,6 +15,16 @@ const FlashcardsPage = {
     studyStartTime: null,
     isFirstPass: true,
 
+    // === CLEANUP (called by Router on page exit) ===
+    cleanup() {
+        // Save session so user can resume later
+        this.saveSession();
+        // Cleanup flashcard swipe listeners
+        if (Flashcard._cleanupSwipeListeners) Flashcard._cleanupSwipeListeners();
+        // Stop any speech
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    },
+
     // === SESSION PERSISTENCE KEYS ===
     SESSION_KEY: 'flashcard_session',
 
@@ -80,8 +90,7 @@ const FlashcardsPage = {
             if (savedSession && savedSession.mode !== 'review') {
                 const level = this.levels.find(l => l.id === savedSession.levelId);
                 if (level) {
-                    await this.resumeSession(savedSession);
-                    return container;
+                    return await this.resumeSession(savedSession, container);
                 }
             }
 
@@ -392,13 +401,13 @@ const FlashcardsPage = {
         }
     },
 
-    async resumeSession(session) {
+    async resumeSession(session, container) {
         try {
             this.currentLevel = this.levels.find(l => l.id === session.levelId);
-            if (!this.currentLevel) { this.clearSession(); return; }
+            if (!this.currentLevel) { this.clearSession(); return container; }
 
             this.allLevelWords = await DB.levels.getWords(session.levelId);
-            if (this.allLevelWords.length === 0) { this.clearSession(); return; }
+            if (this.allLevelWords.length === 0) { this.clearSession(); return container; }
 
             this.learnedWordIds = session.learnedWordIds || [];
             this.repeatWordIds = session.repeatWordIds || [];
@@ -424,11 +433,12 @@ const FlashcardsPage = {
             this.currentWordIndex = Math.min(session.wordIndex || 0, this.words.length - 1);
             if (this.currentWordIndex < 0) this.currentWordIndex = 0;
 
-            const mainContent = document.getElementById('main-content');
-            this.renderStudyView(mainContent, false);
+            // Render into the container that Router will append (not directly to mainContent)
+            return this.renderStudyView(container, false);
         } catch (error) {
             console.error('Oturum devam ettirilemedi:', error);
             this.clearSession();
+            return container;
         }
     },
 
@@ -577,10 +587,13 @@ const FlashcardsPage = {
             'Vazgeç'
         );
         if (confirmed) {
-            // Save progress to DB and session
+            // Save progress to DB
             if (!isReview) this.syncLevelProgress();
+            // Keep session saved so user can resume from level select
             this.saveSession();
             Storage.endStudySession();
+            // Force navigate even if same page name (clear currentPage first)
+            Router.currentPage = null;
             Router.navigate('flashcards');
         }
     }
