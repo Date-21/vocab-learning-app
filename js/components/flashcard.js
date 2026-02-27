@@ -1,6 +1,5 @@
-// Oişbiting — Flashcard Component (Optimized)
-// Celestial DNA — 3D yıldız dönüşü, swipe trail, TTS
-// Performance: faster animations, cleaned event listeners, fewer particles
+// Flashcard Component — Celestial DNA
+// Theme-coherent card with swipe, flip, TTS (male voice, instant)
 
 const Flashcard = {
     currentCard: null,
@@ -13,14 +12,15 @@ const Flashcard = {
     onRepeat: null,
     _boundMove: null,
     _boundUp: null,
+    _voicesLoaded: false,
 
     create(word, options = {}) {
         this.isFlipped = false;
         this.onLearn = options.onLearn || null;
         this.onRepeat = options.onRepeat || null;
 
-        // Clean up previous global listeners
         this._cleanupSwipeListeners();
+        this._ensureVoicesLoaded();
 
         const cardContainer = document.createElement('div');
         cardContainer.className = 'flashcard-viewport';
@@ -29,26 +29,34 @@ const Flashcard = {
             <div class="flashcard">
                 <div class="flashcard-face flashcard-front">
                     <div class="card-top-actions">
-                        <button class="icon-btn sound-btn" aria-label="Sesli oku">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button class="sound-btn" aria-label="Sesli oku" type="button">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
                                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
                             </svg>
                         </button>
                     </div>
-                    
+
                     <div class="front-content">
                         <div class="word">${Helpers.escapeHtml(word.english_word)}</div>
                         ${word.pronunciation ? `<div class="pronunciation">/${Helpers.escapeHtml(word.pronunciation)}/</div>` : ''}
                         <div class="meaning-hint">${Helpers.escapeHtml(word.turkish_meaning)}</div>
                     </div>
 
-                    <div class="card-footer" style="padding-top: var(--space-md);">
-                        <p style="font-weight: 500; opacity: 0.8; letter-spacing: 0.05em;">Kalıcı olmasını istiyorsan çevir</p>
+                    <div class="card-footer">
+                        <p>Kalıcı olmasını istiyorsan çevir</p>
                     </div>
                 </div>
-                
+
                 <div class="flashcard-face flashcard-back">
+                    <div class="card-top-actions">
+                        <button class="sound-btn" aria-label="Sesli oku" type="button">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                            </svg>
+                        </button>
+                    </div>
                     <div class="memory-container">
                         <div class="memory-text">${Helpers.escapeHtml(word.memory_sentence || 'Hafıza metni eklenmemiş.')}</div>
                     </div>
@@ -56,29 +64,6 @@ const Flashcard = {
                         <p>Kelimeye dönmek için dokun</p>
                     </div>
                 </div>
-            </div>
-
-            <div class="flashcard-controls">
-                <button class="control-btn repeat-btn" id="btn-repeat" title="Tekrar Et (Sola Kaydır)">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/>
-                    </svg>
-                    <span>Tekrar</span>
-                </button>
-                
-                <button class="control-btn flip-btn" id="btn-flip" title="Çevir">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 11a8.1 8.1 0 0 0-15.5-2m-.5-8v8h8"/>
-                        <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 8v-8h-8"/>
-                    </svg>
-                </button>
-                
-                <button class="control-btn learn-btn" id="btn-learn" title="Öğrendim (Sağa Kaydır)">
-                    <span>Öğrendim</span>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M13 17l5-5-5-5M6 17l5-5-5-5"/>
-                    </svg>
-                </button>
             </div>
         `;
 
@@ -91,26 +76,13 @@ const Flashcard = {
             this.flip(card);
         });
 
-        // TTS
-        cardContainer.querySelector('.sound-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.speak(word.english_word);
-        });
-
-        // Control Buttons
-        cardContainer.querySelector('#btn-flip').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.flip(card);
-        });
-
-        cardContainer.querySelector('#btn-repeat').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.animateSwipeOut(card, 'left');
-        });
-
-        cardContainer.querySelector('#btn-learn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.animateSwipeOut(card, 'right');
+        // TTS — both front and back sound buttons
+        cardContainer.querySelectorAll('.sound-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                this.speak(word.english_word);
+            });
         });
 
         // Swipe handlers
@@ -148,6 +120,16 @@ const Flashcard = {
         }
     },
 
+    _ensureVoicesLoaded() {
+        if (this._voicesLoaded) return;
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.onvoiceschanged = () => {
+                this._voicesLoaded = true;
+            };
+        }
+    },
+
     setupSwipe(card) {
         const handleStart = (x, y) => {
             this.startX = x;
@@ -169,12 +151,11 @@ const Flashcard = {
                 });
             }
 
-            // Visual feedback
             const threshold = typeof CONFIG !== 'undefined' ? CONFIG.SWIPE_THRESHOLD : 100;
             if (diff > threshold / 2) {
-                card.style.boxShadow = `0 0 30px rgba(52, 211, 153, ${Math.min(0.5, Math.abs(diff) / 300)})`;
+                card.style.boxShadow = `0 0 30px rgba(93, 138, 75, ${Math.min(0.5, Math.abs(diff) / 300)})`;
             } else if (diff < -threshold / 2) {
-                card.style.boxShadow = `0 0 30px rgba(96, 165, 250, ${Math.min(0.5, Math.abs(diff) / 300)})`;
+                card.style.boxShadow = `0 0 30px rgba(166, 61, 61, ${Math.min(0.5, Math.abs(diff) / 300)})`;
             }
         };
 
@@ -197,7 +178,6 @@ const Flashcard = {
             }
         };
 
-        // Mouse events
         card.addEventListener('mousedown', (e) => handleStart(e.clientX, e.clientY));
 
         this._boundMove = (e) => {
@@ -213,7 +193,6 @@ const Flashcard = {
         document.addEventListener('mousemove', this._boundMove);
         document.addEventListener('mouseup', this._boundUp);
 
-        // Touch events
         card.addEventListener('touchstart', (e) => {
             const t = e.touches[0];
             handleStart(t.clientX, t.clientY);
@@ -250,7 +229,6 @@ const Flashcard = {
                 }
             });
         } else {
-            // Fallback
             if (direction === 'right' && this.onLearn) this.onLearn();
             else if (direction === 'left' && this.onRepeat) this.onRepeat();
         }
@@ -288,25 +266,25 @@ const Flashcard = {
 
     speak(text) {
         if (!('speechSynthesis' in window)) return;
-        if (typeof Storage !== 'undefined' && !Storage.getSoundEnabled()) return;
+        if (typeof Storage !== 'undefined' && Storage.getSoundEnabled && !Storage.getSoundEnabled()) return;
 
-        // Cancel any ongoing speech to react instantly
+        // Cancel immediately for instant response
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
         utterance.rate = 0.9;
+        utterance.pitch = 0.9; // slightly lower for male voice
 
-        // Try to find a male English voice
         const voices = window.speechSynthesis.getVoices();
         if (voices.length > 0) {
-            // Check for common male voices (Google UK English Male, Microsoft David, etc.)
+            // Prefer male English voices
             const maleVoice = voices.find(v =>
                 v.lang.startsWith('en') &&
-                (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Mark') || v.name.includes('Guy'))
+                (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Mark') ||
+                 v.name.includes('Guy') || v.name.includes('Daniel') || v.name.includes('James'))
             );
 
-            // If specific male voice found, use it. Otherwise use any English voice
             if (maleVoice) {
                 utterance.voice = maleVoice;
             } else {

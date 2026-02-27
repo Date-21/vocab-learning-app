@@ -1,5 +1,6 @@
-// Oişbiting — Flashcards Page (Takımyıldızlar)
-// Celestial DNA — Her seviye bir takımyıldız, her kelime bir yıldız
+// Flashcards Page — Celestial DNA
+// Her seviye bir takımyıldız, her kelime bir yıldız
+// Session persistence: localStorage + Supabase sync
 
 const FlashcardsPage = {
     levels: [],
@@ -14,6 +15,45 @@ const FlashcardsPage = {
     studyStartTime: null,
     isFirstPass: true,
 
+    // === SESSION PERSISTENCE KEYS ===
+    SESSION_KEY: 'flashcard_session',
+
+    saveSession() {
+        if (!this.currentLevel) return;
+        const session = {
+            levelId: this.currentLevel.id,
+            wordIndex: this.currentWordIndex,
+            learnedWordIds: this.learnedWordIds,
+            repeatWordIds: this.repeatWordIds,
+            isFirstPass: this.isFirstPass,
+            studyStartTime: this.studyStartTime,
+            mode: this.mode,
+            timestamp: Date.now()
+        };
+        try {
+            localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+        } catch (e) { /* quota exceeded */ }
+    },
+
+    loadSession() {
+        try {
+            const raw = localStorage.getItem(this.SESSION_KEY);
+            if (!raw) return null;
+            const session = JSON.parse(raw);
+            // Expire after 24 hours
+            if (Date.now() - session.timestamp > 24 * 60 * 60 * 1000) {
+                this.clearSession();
+                return null;
+            }
+            return session;
+        } catch { return null; }
+    },
+
+    clearSession() {
+        localStorage.removeItem(this.SESSION_KEY);
+    },
+
+    // === RENDER ===
     async render(params = {}) {
         const container = document.createElement('div');
         container.className = 'flashcards-page page-enter';
@@ -24,7 +64,6 @@ const FlashcardsPage = {
             return await this.renderReviewMode(container);
         }
 
-        // Load levels with optimized DB call
         try {
             const [levelsWithCounts, levelProgress] = await Promise.all([
                 DB.levels.getAllWithCounts(),
@@ -33,9 +72,18 @@ const FlashcardsPage = {
 
             this.levels = levelsWithCounts;
 
-            // Map progress for quick lookup
             const progressMap = {};
             levelProgress.forEach(p => { progressMap[p.level_id] = p; });
+
+            // Check for saved session — resume if exists
+            const savedSession = this.loadSession();
+            if (savedSession && savedSession.mode !== 'review') {
+                const level = this.levels.find(l => l.id === savedSession.levelId);
+                if (level) {
+                    await this.resumeSession(savedSession);
+                    return container;
+                }
+            }
 
             container.innerHTML = `
                 <div class="page-header">
@@ -89,7 +137,6 @@ const FlashcardsPage = {
         const progress = progressMap[level.id] || { is_unlocked: false, is_completed: false, current_word_index: 0 };
         const wordCount = level.wordCount || 0;
 
-        // Unlock logic: first level or previous level completed
         let isUnlocked = progress.is_unlocked;
         if (!isUnlocked && index === 0) isUnlocked = true;
         if (!isUnlocked && index > 0) {
@@ -101,7 +148,6 @@ const FlashcardsPage = {
         const percent = wordCount > 0 ? Math.round((progress.current_word_index / wordCount) * 100) : 0;
         const statusClass = !isUnlocked ? 'locked' : progress.is_completed ? 'completed' : '';
 
-        // Constellation star icon based on status
         let statusIcon = '';
         if (progress.is_completed) {
             statusIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-1)" stroke-width="1.5">
@@ -179,12 +225,14 @@ const FlashcardsPage = {
         Storage.startStudySession();
     },
 
+    // === STUDY VIEW ===
     renderStudyView(container, isReview = false) {
         container.innerHTML = '';
         container.className = 'flashcard-study page-enter';
 
         const word = this.words[this.currentWordIndex];
         if (!word) {
+            this.clearSession();
             Router.navigate('flashcards');
             return container;
         }
@@ -192,46 +240,53 @@ const FlashcardsPage = {
         const totalWords = this.allLevelWords.length;
         const progress = totalWords > 0 ? (this.learnedWordIds.length / totalWords) * 100 : 0;
 
+        // Save session on every card render
+        this.saveSession();
+
         container.innerHTML = `
-            <div class="flashcard-viewport">
-                <div class="flashcard-progress">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
-                        <span style="font-family: var(--font-display); font-size: var(--text-sm); color: var(--accent-1);">
-                            ${isReview ? 'Yıldız Tekrarı' : Helpers.escapeHtml(this.currentLevel?.name || 'Keşif')}
-                        </span>
-                        <span style="font-size: var(--text-xs); color: var(--text-muted);">
-                            ${this.learnedWordIds.length}/${totalWords}
-                        </span>
-                    </div>
-                    <div class="progress"><div class="progress-bar" style="width: ${progress}%"></div></div>
+            <div class="flashcard-progress">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+                    <span style="font-family: var(--font-display); font-size: var(--text-sm); color: var(--accent-1);">
+                        ${isReview ? 'Yıldız Tekrarı' : Helpers.escapeHtml(this.currentLevel?.name || 'Keşif')}
+                    </span>
+                    <span style="font-size: var(--text-xs); color: var(--text-muted);">
+                        ${this.learnedWordIds.length}/${totalWords}
+                    </span>
                 </div>
+                <div class="progress"><div class="progress-bar" style="width: ${progress}%"></div></div>
+            </div>
 
-                <div id="flashcard-container"></div>
+            <div id="flashcard-container"></div>
 
-                <div class="flashcard-controls">
-                    <button class="control-btn repeat-btn" id="study-repeat">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-                        </svg>
-                        Tekrar
-                    </button>
-                    <button class="control-btn flip-btn" id="study-flip">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 14"/>
-                        </svg>
-                    </button>
-                    <button class="control-btn learn-btn" id="study-learn">
-                        Öğrendim
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <button class="btn btn-ghost" id="exit-study" style="margin-top: var(--space-lg); color: var(--text-faint);">
-                    Gözlemi Bitir
+            <div class="flashcard-controls">
+                <button class="control-btn repeat-btn" id="study-repeat">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                    Tekrar
+                </button>
+                <button class="control-btn flip-btn" id="study-flip">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                        <path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+                    </svg>
+                </button>
+                <button class="control-btn learn-btn" id="study-learn">
+                    Öğrendim
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                 </button>
             </div>
+
+            <button class="exit-study-btn" id="exit-study">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Gözlemi Bitir
+            </button>
         `;
 
         // Create card component
@@ -246,13 +301,19 @@ const FlashcardsPage = {
         container.querySelector('#study-flip').addEventListener('click', () => Flashcard.flip());
         container.querySelector('#study-repeat').addEventListener('click', () => this.handleRepeat(word, isReview));
         container.querySelector('#study-learn').addEventListener('click', () => this.handleLearn(word, isReview));
-        container.querySelector('#exit-study').addEventListener('click', () => this.exitStudy(isReview));
+
+        // Exit study — moved outside viewport, guaranteed clickable
+        const exitBtn = container.querySelector('#exit-study');
+        exitBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.exitStudy(isReview);
+        });
 
         return container;
     },
 
     setupEventListeners(container) {
-        // Level clicks
         container.querySelectorAll('.level-card:not(.locked)').forEach(card => {
             card.addEventListener('click', () => {
                 const levelId = parseInt(card.dataset.levelId);
@@ -260,7 +321,6 @@ const FlashcardsPage = {
             });
         });
 
-        // Search logic
         const searchInput = container.querySelector('#word-search');
         if (searchInput) {
             searchInput.addEventListener('input', Helpers.debounce(async (e) => {
@@ -280,6 +340,7 @@ const FlashcardsPage = {
         }
     },
 
+    // === START / RESUME LEVEL ===
     async startLevel(levelId) {
         this.currentLevel = this.levels.find(l => l.id === levelId);
         try {
@@ -289,7 +350,6 @@ const FlashcardsPage = {
                 return;
             }
 
-            // Progress verisini çek, yoksa oluştur
             const allProgress = (await DB.progress.getLevelProgress(Auth.user.id)) || [];
             let progress = allProgress.find(p => p.level_id === levelId);
 
@@ -301,7 +361,6 @@ const FlashcardsPage = {
             this.repeatWordIds = progress.repeat_words || [];
             this.firstTimeLearnedCount = this.learnedWordIds.length;
 
-            // Öğrenilmemiş VE tekrar kuyruğunda olmayan (yani hiç kaydırılmamış) kelimeler
             const unswiped = this.allLevelWords.filter(w =>
                 !this.learnedWordIds.includes(w.id) &&
                 !this.repeatWordIds.includes(w.id)
@@ -311,14 +370,11 @@ const FlashcardsPage = {
                 this.words = unswiped;
                 this.isFirstPass = this.learnedWordIds.length === 0;
             } else if (this.repeatWordIds.length > 0) {
-                // Eğer hiç kaydırılmamış kalmadıysa ama "Tekrar Et"e atılanlar varsa,
-                // demek ki birinci turu bitirmiş, sayfayı yenilemiş ve tekrar turunda.
                 this.words = this.allLevelWords.filter(w => this.repeatWordIds.includes(w.id));
                 this.repeatWordIds = [];
-                this.syncLevelProgress(); // Tekrar kuyruğuna başlıyoruz, temizleyip db ile eşitle.
+                this.syncLevelProgress();
                 this.isFirstPass = false;
             } else {
-                // Her şey öğrenilmişse komple tekrar modu
                 this.words = [...this.allLevelWords];
                 this.isFirstPass = false;
             }
@@ -336,6 +392,47 @@ const FlashcardsPage = {
         }
     },
 
+    async resumeSession(session) {
+        try {
+            this.currentLevel = this.levels.find(l => l.id === session.levelId);
+            if (!this.currentLevel) { this.clearSession(); return; }
+
+            this.allLevelWords = await DB.levels.getWords(session.levelId);
+            if (this.allLevelWords.length === 0) { this.clearSession(); return; }
+
+            this.learnedWordIds = session.learnedWordIds || [];
+            this.repeatWordIds = session.repeatWordIds || [];
+            this.isFirstPass = session.isFirstPass;
+            this.studyStartTime = session.studyStartTime || Date.now();
+            this.mode = session.mode || 'learn';
+
+            // Rebuild the words array: unswiped words
+            const unswiped = this.allLevelWords.filter(w =>
+                !this.learnedWordIds.includes(w.id) &&
+                !this.repeatWordIds.includes(w.id)
+            );
+
+            if (unswiped.length > 0) {
+                this.words = unswiped;
+            } else if (this.repeatWordIds.length > 0) {
+                this.words = this.allLevelWords.filter(w => this.repeatWordIds.includes(w.id));
+            } else {
+                this.words = [...this.allLevelWords];
+            }
+
+            // Clamp wordIndex
+            this.currentWordIndex = Math.min(session.wordIndex || 0, this.words.length - 1);
+            if (this.currentWordIndex < 0) this.currentWordIndex = 0;
+
+            const mainContent = document.getElementById('main-content');
+            this.renderStudyView(mainContent, false);
+        } catch (error) {
+            console.error('Oturum devam ettirilemedi:', error);
+            this.clearSession();
+        }
+    },
+
+    // === PROGRESS SYNC ===
     syncLevelProgress() {
         if (!this.currentLevel || !Auth.user) return;
         DB.progress.updateLevelProgress(Auth.user.id, this.currentLevel.id, {
@@ -352,7 +449,7 @@ const FlashcardsPage = {
             DB.progress.updateReview(Auth.user.id, word.id, true);
         } else {
             DB.progress.markWordLearned(Auth.user.id, word.id);
-            this.syncLevelProgress(); // Her öğrendiğinde kaydet ki kaldığı yerden devam edebilsin
+            this.syncLevelProgress();
         }
 
         this.nextWord(isReview);
@@ -364,7 +461,7 @@ const FlashcardsPage = {
         if (isReview) {
             DB.progress.updateReview(Auth.user.id, word.id, false);
         } else {
-            this.syncLevelProgress(); // Her tekrara attığında kaydet
+            this.syncLevelProgress();
         }
 
         this.nextWord(isReview);
@@ -375,10 +472,9 @@ const FlashcardsPage = {
 
         if (this.currentWordIndex >= this.words.length) {
             if (this.repeatWordIds.length > 0) {
-                // Tekrar listesine geçiliyor
                 this.words = this.allLevelWords.filter(w => this.repeatWordIds.includes(w.id));
                 this.repeatWordIds = [];
-                if (!isReview) this.syncLevelProgress(); // Tekrar listesini temizlediğimizi db'ye de yansıt
+                if (!isReview) this.syncLevelProgress();
                 this.currentWordIndex = 0;
                 this.isFirstPass = false;
                 this.renderStudyView(document.getElementById('main-content'), isReview);
@@ -388,14 +484,15 @@ const FlashcardsPage = {
             return;
         }
 
-        // Update view for next word
         this.renderStudyView(document.getElementById('main-content'), isReview);
     },
 
+    // === LEVEL COMPLETE ===
     async completeLevel(isReview) {
         const studyTime = Math.floor((Date.now() - this.studyStartTime) / 60000);
         Auth.updateStudyTime(studyTime);
         Storage.endStudySession();
+        this.clearSession();
 
         if (!isReview && this.currentLevel) {
             await DB.progress.updateLevelProgress(Auth.user.id, this.currentLevel.id, {
@@ -411,39 +508,78 @@ const FlashcardsPage = {
         const mainContent = document.getElementById('main-content');
         Flashcard.celebrateCompletion(mainContent);
 
-        // Bir sonraki seviyeyi bul
         const currentIdx = this.levels.findIndex(l => l.id === this.currentLevel.id);
         const nextLevel = this.levels[currentIdx + 1];
 
         mainContent.innerHTML = `
             <div class="level-complete">
-                <div class="level-complete-icon animate-bounce-in">🌟</div>
-                <h2 style="font-family: var(--font-display); font-size: var(--text-3xl); margin-bottom: var(--space-xs); color: var(--text-primary);">Gözlem Tamamlandı!</h2>
-                <p style="color: var(--text-muted); font-size: var(--text-lg); margin-bottom: var(--space-xl);">Yeni yıldızlar haritalandı ve gökyüzün daha parlak.</p>
-                
-                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-md); max-width: 400px; margin: 0 auto var(--space-2xl);">
-                    <div style="background: rgba(var(--accent-1-rgb), 0.08); border: 1px solid rgba(var(--accent-1-rgb), 0.2); padding: var(--space-lg); border-radius: var(--radius-md);">
-                        <div style="font-family: var(--font-display); font-size: clamp(2rem, 5vw, 2.5rem); font-weight: 800; color: var(--accent-1); line-height: 1.1;">${this.allLevelWords.length}</div>
-                        <div style="font-size: var(--text-sm); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px;">Yıldız</div>
+                <div class="level-complete-icon">&#11088;</div>
+                <h2 style="font-family: var(--font-display); font-size: var(--text-3xl); margin-bottom: var(--space-xs); color: var(--text);">
+                    Gözlem Tamamlandı!
+                </h2>
+                <p style="color: var(--text-muted); font-size: var(--text-base); margin-bottom: var(--space-xl); max-width: 280px;">
+                    Yeni yıldızlar haritalandı ve gökyüzün daha parlak.
+                </p>
+
+                <div class="complete-stats">
+                    <div class="complete-stat-card" style="background: rgba(var(--accent-1-rgb), 0.08); border: 1px solid rgba(var(--accent-1-rgb), 0.2);">
+                        <div class="stat-value" style="color: var(--accent-1);">${this.allLevelWords.length}</div>
+                        <div class="stat-label">Yıldız</div>
                     </div>
-                    <div style="background: rgba(var(--accent-2-rgb), 0.08); border: 1px solid rgba(var(--accent-2-rgb), 0.2); padding: var(--space-lg); border-radius: var(--radius-md);">
-                        <div style="font-family: var(--font-display); font-size: clamp(2rem, 5vw, 2.5rem); font-weight: 800; color: var(--accent-2); line-height: 1.1;">${studyTime || 0}<span style="font-size: var(--text-md);">dk</span></div>
-                        <div style="font-size: var(--text-sm); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px;">Süre</div>
+                    <div class="complete-stat-card" style="background: rgba(var(--accent-2-rgb), 0.08); border: 1px solid rgba(var(--accent-2-rgb), 0.2);">
+                        <div class="stat-value" style="color: var(--accent-2);">${studyTime || '<1'}<span style="font-size: var(--text-sm);">dk</span></div>
+                        <div class="stat-label">Süre</div>
                     </div>
                 </div>
-                
-                <div style="display: flex; flex-direction: column; gap: var(--space-md); max-width: 300px; margin: 0 auto;">
-                    ${nextLevel ? `<button class="btn btn-primary btn-block" onclick="FlashcardsPage.startLevel('${nextLevel.id}')" style="box-shadow: 0 4px 15px rgba(var(--accent-1-rgb), 0.3);">Sonraki Seviyeye Geç</button>` : ''}
-                    <button class="btn btn-secondary btn-block" onclick="FlashcardsPage.startLevel('${this.currentLevel.id}')">Tekrar Et</button>
-                    <button class="btn btn-ghost btn-block" style="border: 1px solid rgba(255,255,255,0.1);" onclick="Router.navigate('flashcards')">Gözlem Evine Dön</button>
+
+                <div class="complete-actions">
+                    ${nextLevel ? `
+                        <button class="btn btn-next-level" id="btn-next-level">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;">
+                                <path d="M13 17l5-5-5-5M6 17l5-5-5-5"/>
+                            </svg>
+                            Sonraki Seviyeye Geç
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-repeat-level" id="btn-repeat-level">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;">
+                            <path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                        </svg>
+                        Tekrar Et
+                    </button>
+                    <button class="btn btn-back-levels" id="btn-back-levels">
+                        Seviyelere Dön
+                    </button>
                 </div>
             </div>
         `;
+
+        // Button listeners
+        if (nextLevel) {
+            mainContent.querySelector('#btn-next-level').addEventListener('click', () => {
+                this.startLevel(nextLevel.id);
+            });
+        }
+        mainContent.querySelector('#btn-repeat-level').addEventListener('click', () => {
+            this.startLevel(this.currentLevel.id);
+        });
+        mainContent.querySelector('#btn-back-levels').addEventListener('click', () => {
+            Router.navigate('flashcards');
+        });
     },
 
+    // === EXIT STUDY ===
     async exitStudy(isReview) {
-        const confirmed = await Modal.confirm('Gözlemi yarıda kesmek istediğine emin misin?', 'Gözlemi Bitir', 'Çıkış Yap', 'Vazgeç');
+        const confirmed = await Modal.confirm(
+            'İlerlemen kaydedildi. Kaldığın yerden devam edebilirsin.',
+            'Gözlemi Bitir',
+            'Çıkış Yap',
+            'Vazgeç'
+        );
         if (confirmed) {
+            // Save progress to DB and session
+            if (!isReview) this.syncLevelProgress();
+            this.saveSession();
             Storage.endStudySession();
             Router.navigate('flashcards');
         }
