@@ -258,8 +258,10 @@ const DB = {
         async getLeaderboard(type = 'points', period = 'all', limit = 10) {
             let query = supabaseClient
                 .from('users')
-                .select('id, username, total_points, total_study_time')
-                .eq('is_active', true);
+                .select('id, username, total_points, total_study_time, is_admin')
+                .eq('is_active', true)
+                .eq('is_admin', false)
+                .gt('total_points', 0);
 
             if (type === 'points') {
                 query = query.order('total_points', { ascending: false });

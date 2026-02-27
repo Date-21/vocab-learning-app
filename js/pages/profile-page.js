@@ -360,9 +360,14 @@ const ProfilePage = {
         });
 
         container.querySelector('#logout-btn').addEventListener('click', async () => {
-            const confirmed = await Modal.confirm('Gözlemevinden ayrılmak istiyor musunuz?', 'Çıkış');
-            if (confirmed) {
-                await Auth.signOut();
+            try {
+                const confirmed = await Modal.confirm('Gözlemevinden ayrılmak istiyor musunuz?', 'Çıkış', 'Evet', 'Hayır');
+                if (confirmed) {
+                    await Auth.signOut();
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                Toast.error('Çıkış yapılamadı: ' + error.message);
             }
         });
     },

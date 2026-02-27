@@ -17,8 +17,9 @@ const FlashcardsPage = {
 
     // === CLEANUP (called by Router on page exit) ===
     cleanup() {
-        // Save session so user can resume later
-        this.saveSession();
+        // DON'T save session here - only save when user actively swipes/learns
+        // If they just navigate away without action, let them return to level select
+
         // Cleanup flashcard swipe listeners
         if (Flashcard._cleanupSwipeListeners) Flashcard._cleanupSwipeListeners();
         // Stop any speech
@@ -143,7 +144,7 @@ const FlashcardsPage = {
     },
 
     renderLevelCard(level, index, progressMap) {
-        const progress = progressMap[level.id] || { is_unlocked: false, is_completed: false, current_word_index: 0 };
+        const progress = progressMap[level.id] || { is_unlocked: false, is_completed: false, learned_words: [] };
         const wordCount = level.wordCount || 0;
 
         let isUnlocked = progress.is_unlocked;
@@ -154,7 +155,9 @@ const FlashcardsPage = {
             if (prevProgress && prevProgress.is_completed) isUnlocked = true;
         }
 
-        const percent = wordCount > 0 ? Math.round((progress.current_word_index / wordCount) * 100) : 0;
+        // Calculate progress based on learned_words array length
+        const learnedCount = (progress.learned_words || []).length;
+        const percent = wordCount > 0 ? Math.round((learnedCount / wordCount) * 100) : 0;
         const statusClass = !isUnlocked ? 'locked' : progress.is_completed ? 'completed' : '';
 
         let statusIcon = '';
@@ -183,7 +186,7 @@ const FlashcardsPage = {
                 <h3 style="font-family: var(--font-display); font-size: var(--text-md); margin-bottom: var(--space-sm);">${Helpers.escapeHtml(level.name)}</h3>
                 <div style="display: flex; align-items: center; gap: var(--space-sm); font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-md);">
                     <span>${wordCount} Yıldız</span>
-                    <span>%${percent} Keşif</span>
+                    <span>${learnedCount} Keşif</span>
                 </div>
                 ${isUnlocked ? `
                     <div class="progress" style="height: 4px;">
@@ -248,9 +251,6 @@ const FlashcardsPage = {
 
         const totalWords = this.allLevelWords.length;
         const progress = totalWords > 0 ? (this.learnedWordIds.length / totalWords) * 100 : 0;
-
-        // Save session on every card render
-        this.saveSession();
 
         container.innerHTML = `
             <div class="flashcard-study-inner">
