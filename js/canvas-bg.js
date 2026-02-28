@@ -18,29 +18,54 @@ class StellarAtmosphere {
         this.isVisible = true;
         this.nebulaFrame = 0;
         this.animId = null;
+        this._boundResize = null;
+        this._boundPointerMove = null;
+        this._boundVisibilityChange = null;
 
         this.resize();
         this.initStars();
 
-        window.addEventListener('resize', () => this.resize());
+        this._boundResize = () => this.resize();
+        window.addEventListener('resize', this._boundResize);
 
         // Throttled pointer tracking (every 32ms ~30fps)
         let pointerThrottle = 0;
-        document.addEventListener('pointermove', (e) => {
+        this._boundPointerMove = (e) => {
             const now = Date.now();
             if (now - pointerThrottle < 32) return;
             pointerThrottle = now;
             this.pointer.x = e.clientX;
             this.pointer.y = e.clientY;
-        }, { passive: true });
+        };
+        document.addEventListener('pointermove', this._boundPointerMove, { passive: true });
 
         // Page Visibility API — pause when tab is hidden
-        document.addEventListener('visibilitychange', () => {
+        this._boundVisibilityChange = () => {
             this.isVisible = !document.hidden;
             if (this.isVisible && !this.animId) this.animate();
-        });
+        };
+        document.addEventListener('visibilitychange', this._boundVisibilityChange);
 
         this.animate();
+    }
+
+    destroy() {
+        if (this.animId) {
+            cancelAnimationFrame(this.animId);
+            this.animId = null;
+        }
+        if (this._boundResize) {
+            window.removeEventListener('resize', this._boundResize);
+            this._boundResize = null;
+        }
+        if (this._boundPointerMove) {
+            document.removeEventListener('pointermove', this._boundPointerMove);
+            this._boundPointerMove = null;
+        }
+        if (this._boundVisibilityChange) {
+            document.removeEventListener('visibilitychange', this._boundVisibilityChange);
+            this._boundVisibilityChange = null;
+        }
     }
 
     resize() {

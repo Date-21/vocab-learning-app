@@ -15,6 +15,7 @@ const Router = {
     isTransitioning: false,
     navigationHistory: [],
     hasGSAP: typeof gsap !== 'undefined',
+    _idleListeners: [],
 
     init() {
         this.navElement = document.getElementById('bottom-nav');
@@ -60,6 +61,11 @@ const Router = {
             const pageMap = this.getPageMap();
             const currentInstance = pageMap[this.currentPage];
             if (currentInstance?.cleanup) currentInstance.cleanup();
+
+            // Kill all active GSAP tweens on main content to prevent memory leaks
+            if (typeof gsap !== 'undefined' && this.mainContent) {
+                gsap.killTweensOf(this.mainContent.querySelectorAll('*'));
+            }
         }
 
         const prevPage = this.currentPage;
@@ -152,7 +158,11 @@ const Router = {
         if (!pageEl) { this.mainContent.innerHTML = ''; return; }
 
         // Single fast fade-out + slight shift — no per-element queries
-        const tl = gsap.timeline();
+        const tl = gsap.timeline({
+            onComplete: () => {
+                tl.kill(); // Prevent memory leak
+            }
+        });
         tl.to(pageEl, {
             opacity: 0,
             x: (direction === 'forward' ? -1 : 1) * 12,
@@ -177,7 +187,13 @@ const Router = {
         const cappedCards = cards.length > 6 ? Array.from(cards).slice(0, 6) : cards;
         const remainingCards = cards.length > 6 ? Array.from(cards).slice(6) : [];
 
-        const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+        const tl = gsap.timeline({
+            defaults: { ease: 'power2.out' },
+            onComplete: () => {
+                // Kill timeline after completion to prevent memory leaks
+                tl.kill();
+            }
+        });
 
         if (title) {
             gsap.set(title, { opacity: 0, y: 8 });
@@ -205,7 +221,12 @@ const Router = {
         const title = pageEl.querySelector('.page-title');
         const cards = pageEl.querySelectorAll('.card, .level-card, .study-option-card, .competition-option, .quick-action, .stat-card');
 
-        const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+        const tl = gsap.timeline({
+            defaults: { ease: 'power2.out' },
+            onComplete: () => {
+                tl.kill(); // Prevent memory leak
+            }
+        });
 
         if (title) {
             gsap.set(title, { opacity: 0, y: 8 });
@@ -235,6 +256,9 @@ const Router = {
     },
 
     setupIdleDetection() {
+        // Clean up existing listeners first to prevent duplicates
+        this._cleanupIdleListeners();
+
         const resetIdle = () => {
             if (this.idleTimer) clearTimeout(this.idleTimer);
             if (this.studyTimerPaused) this.studyTimerPaused = false;
@@ -242,10 +266,19 @@ const Router = {
         };
 
         ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+            const listener = { event, handler: resetIdle };
             document.addEventListener(event, resetIdle, { passive: true });
+            this._idleListeners.push(listener);
         });
 
         resetIdle();
+    },
+
+    _cleanupIdleListeners() {
+        this._idleListeners.forEach(({ event, handler }) => {
+            document.removeEventListener(event, handler, { passive: true });
+        });
+        this._idleListeners = [];
     },
 
     getCurrentPage() {

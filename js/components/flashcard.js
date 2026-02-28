@@ -12,6 +12,9 @@ const Flashcard = {
     onRepeat: null,
     _boundMove: null,
     _boundUp: null,
+    _boundTouchStart: null,
+    _boundTouchMove: null,
+    _boundTouchEnd: null,
     _voicesLoaded: false,
 
     create(word, options = {}) {
@@ -118,6 +121,18 @@ const Flashcard = {
             document.removeEventListener('mouseup', this._boundUp);
             this._boundUp = null;
         }
+        if (this._boundTouchStart && this.currentCard) {
+            this.currentCard.removeEventListener('touchstart', this._boundTouchStart);
+            this._boundTouchStart = null;
+        }
+        if (this._boundTouchMove && this.currentCard) {
+            this.currentCard.removeEventListener('touchmove', this._boundTouchMove);
+            this._boundTouchMove = null;
+        }
+        if (this._boundTouchEnd && this.currentCard) {
+            this.currentCard.removeEventListener('touchend', this._boundTouchEnd);
+            this._boundTouchEnd = null;
+        }
     },
 
     _ensureVoicesLoaded() {
@@ -193,20 +208,22 @@ const Flashcard = {
         document.addEventListener('mousemove', this._boundMove);
         document.addEventListener('mouseup', this._boundUp);
 
-        card.addEventListener('touchstart', (e) => {
+        this._boundTouchStart = (e) => {
             const t = e.touches[0];
             handleStart(t.clientX, t.clientY);
-        }, { passive: true });
-
-        card.addEventListener('touchmove', (e) => {
+        };
+        this._boundTouchMove = (e) => {
             const t = e.touches[0];
             handleMove(t.clientX);
-        }, { passive: true });
-
-        card.addEventListener('touchend', () => {
+        };
+        this._boundTouchEnd = () => {
             handleEnd();
             this.startX = 0;
-        });
+        };
+
+        card.addEventListener('touchstart', this._boundTouchStart, { passive: true });
+        card.addEventListener('touchmove', this._boundTouchMove, { passive: true });
+        card.addEventListener('touchend', this._boundTouchEnd);
     },
 
     animateSwipeOut(card, direction) {
