@@ -35,7 +35,13 @@ const App = {
         const hash = window.location.hash.replace('#', '');
         const validRoutes = Object.values(CONFIG.ROUTES);
 
-        if (hash && validRoutes.includes(hash) && hash !== CONFIG.ROUTES.AUTH) {
+        // Try to restore navigation context from before page refresh
+        const savedContext = Storage.getNavigationContext();
+
+        if (savedContext && Date.now() - savedContext.timestamp < 3600000) {
+            // Context is less than 1 hour old, restore it
+            Router.navigate(savedContext.page, savedContext.params || {}, false);
+        } else if (hash && validRoutes.includes(hash) && hash !== CONFIG.ROUTES.AUTH) {
             Router.navigate(hash, {}, false);
         } else {
             Router.navigate(CONFIG.ROUTES.FLASHCARDS, {}, false);

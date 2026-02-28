@@ -344,7 +344,9 @@ const ForumPage = {
                 try {
                     await DB.forum.addComment(Auth.user.id, postId, text);
                     input.value = '';
-                    Toast.success('Yorumunuz onaya sunuldu');
+                    Toast.success('Yorumunuz gönderildi');  // Changed from "onaya sunuldu"
+                    // Reload comments to show the new one
+                    await this.loadComments(container, postId);
                     if (navigator.vibrate) navigator.vibrate(5);
                 } catch (error) {
                     Toast.error('Yorum gönderilemedi');

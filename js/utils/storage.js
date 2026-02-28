@@ -71,7 +71,20 @@ const Storage = {
 
     // Session ID
     getSessionId() { return this.get(CONFIG.STORAGE_KEYS.SESSION_ID); },
-    setSessionId(id) { this.set(CONFIG.STORAGE_KEYS.SESSION_ID, id); }
+    setSessionId(id) { this.set(CONFIG.STORAGE_KEYS.SESSION_ID, id); },
+
+    // Navigation context for page refresh restoration
+    getNavigationContext() {
+        return this.get('navigation_context', null);
+    },
+
+    setNavigationContext(page, params) {
+        this.set('navigation_context', { page, params, timestamp: Date.now() });
+    },
+
+    clearNavigationContext() {
+        this.remove('navigation_context');
+    }
 };
 
 // Initialize theme on load

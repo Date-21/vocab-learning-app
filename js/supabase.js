@@ -769,11 +769,11 @@ const DB = {
         },
 
         async getByCode(code) {
-            const { data, error } = await supabaseClient
+            const { data, error} = await supabaseClient
                 .from('game_rooms')
                 .select('*')
-                .eq('room_code', code)
-                .eq('status', 'waiting')
+                .eq('room_code', code.trim())  // Add trim() to handle whitespace
+                // REMOVED: .eq('status', 'waiting') - Allow joining in-progress rooms
                 .single();
 
             if (error) return null;
@@ -781,6 +781,17 @@ const DB = {
         },
 
         async joinRoom(roomId, userId) {
+            // First check if room exists and is joinable
+            const room = await this.getRoom(roomId);
+            if (!room) throw new Error('Oda bulunamadı');
+            if (room.status === 'finished') throw new Error('Yarış tamamlanmış');
+
+            const participants = await this.getParticipants(roomId);
+            if (participants.length >= CONFIG.MAX_PARTICIPANTS) {
+                throw new Error('Oda dolu');
+            }
+
+            // Now insert participant
             const { data, error } = await supabaseClient
                 .from('game_participants')
                 .insert({
@@ -1041,7 +1052,7 @@ const DB = {
                     post_id: postId,
                     user_id: userId,
                     content,
-                    is_approved: false,
+                    is_approved: true,  // Auto-approve comments
                     created_at: new Date().toISOString()
                 })
                 .select()

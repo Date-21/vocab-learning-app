@@ -9,7 +9,8 @@ const Modal = {
         this.confirmModal = document.getElementById('confirm-modal');
         if (!this.confirmModal) return;
 
-        this.confirmModal.querySelector('.modal-backdrop').addEventListener('click', () => {
+        this.confirmModal.querySelector('.modal-backdrop').addEventListener('click', (e) => {
+            e.stopPropagation();
             this.closeConfirm(false);
         });
 
@@ -86,7 +87,10 @@ const Modal = {
         `;
 
         if (closable) {
-            modal.querySelector('.modal-backdrop').addEventListener('click', () => this.close(modal));
+            modal.querySelector('.modal-backdrop').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.close(modal);
+            });
             const closeBtn = modal.querySelector('.modal-close');
             if (closeBtn) closeBtn.addEventListener('click', () => this.close(modal));
         }

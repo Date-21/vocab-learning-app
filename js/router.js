@@ -76,6 +76,11 @@ const Router = {
         if (pushState) {
             history.pushState({ page, params }, '', `#${page}`);
             this.navigationHistory.push(page);
+
+            // Save navigation context for page refresh restoration
+            if (typeof Storage !== 'undefined') {
+                Storage.setNavigationContext(page, params);
+            }
         }
 
         this.updateNav(page);

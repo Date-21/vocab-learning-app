@@ -768,6 +768,7 @@ select {
     background: rgba(10, 14, 26, 0.8);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+    pointer-events: auto;  /* Allow clicks on backdrop to close modal */
 }
 
 .modal-content {
@@ -781,6 +782,8 @@ select {
     max-height: 80vh;
     overflow-y: auto;
     animation: modal-enter 0.3s var(--ease-orbital) forwards;
+    pointer-events: auto;  /* Keep modal content interactive */
+    z-index: 1;  /* Above backdrop */
 }
 
 .modal-small { max-width: 380px; }
